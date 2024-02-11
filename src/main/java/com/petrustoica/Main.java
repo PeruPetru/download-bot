@@ -6,7 +6,7 @@ import discord4j.core.object.entity.Message;
 import reactor.core.publisher.Mono;
 public class Main {
     public static void main(String[] args) {
-        DiscordClient discordClient = DiscordClient.create("MTIwMjMzNTMyMDgyNjQ2NjQyNQ.G3_qWN.h5a0OCdposCuSwamSr56anPFUmO4k5o1slpAuM");
+        DiscordClient discordClient = DiscordClient.create(System.getenv("DOWNLOAD_BOT_DISCORD_TOKEN"));
         discordClient.withGateway(client ->
             client.on(MessageCreateEvent.class, event -> {
                 Message message = event.getMessage();
