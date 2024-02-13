@@ -1,11 +1,11 @@
 package com.petrustoica;
 
-import discord4j.core.DiscordClient;
+import discord4j.core.DiscordClientBuilder;
+import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
-import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,28 +13,31 @@ public class Main {
     
     private static final Map<String, Command> commandMap = new HashMap<>();
     
-    public static void main(String[] args) {
-        commandMap.put("mp3", new DownloadCommand());
-
-
-        try {
-            DiscordClient discordClient = DiscordClient.create(System.getenv("DOWNLOAD_BOT_DISCORD_TOKEN"));
-            discordClient.withGateway(client ->
-                client.on(MessageCreateEvent.class, event -> {
-                    Message message = event.getMessage();
-                    if(message.getUserData().username().equals(discordClient.getUserService().getCurrentUser().block().username())){
-                        if(message.getContent().startsWith("mp3")){
-                            return commandMap.get("mp3").execute(event);
-                        }
-                        return Mono.empty();
-                    }else{
-                        return Mono.empty();
-                        }
-                }))
-                    .block();
-        }catch (Exception e){
-            System.out.println("Failed to get Token");
-            System.out.println(Arrays.toString(e.getStackTrace()));
+        static{
+            commandMap.put("mp3", new DownloadCommand());
         }
+    public static void main(String[] args) {
+
+        GatewayDiscordClient client = DiscordClientBuilder.create(System.getenv("DOWNLOAD_BOT_DISCORD_TOKEN")).build()
+                    .login()
+                    .block();
+
+        client.getEventDispatcher().on(MessageCreateEvent.class)
+                .subscribe(event -> {
+                Message message = event.getMessage();
+                if(!message.getUserData().username().equals(client.getSelf().block().getUsername())){
+                    if(message.getContent().startsWith("mp3")){
+                        try {
+                            commandMap.get("mp3").execute(event);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+            });
+
+        client.onDisconnect().block();
     }
 }
