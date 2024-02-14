@@ -14,7 +14,8 @@ public class Main {
     private static final Map<String, Command> commandMap = new HashMap<>();
     
         static{
-            commandMap.put("mp3", new DownloadCommand());
+            commandMap.put("mp3", new DownloadMP3Command());
+            commandMap.put("mp4", new DownloadMP4Command());
         }
     public static void main(String[] args) {
 
@@ -26,9 +27,17 @@ public class Main {
                 .subscribe(event -> {
                 Message message = event.getMessage();
                 if(!message.getUserData().username().equals(client.getSelf().block().getUsername())){
-                    if(message.getContent().startsWith("mp3")){
+                    if(message.getContent().toLowerCase().startsWith("mp3")){
                         try {
                             commandMap.get("mp3").execute(event);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }else if(message.getContent().toLowerCase().startsWith("mp4")){
+                        try {
+                            commandMap.get("mp4").execute(event);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         } catch (InterruptedException e) {
